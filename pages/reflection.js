@@ -75,23 +75,23 @@ export default function Reflection() {
   const handleSubmit = () => {
     const today = new Date().toISOString().slice(0, 10);
     let reflections = JSON.parse(localStorage.getItem('reflections')) || [];
-
-    // Filter out today's reflection if it exists to avoid double-counting
+  
+    // Remove the existing reflection for today
     reflections = reflections.filter((reflection) => reflection.date !== today);
-
+  
     const updatedReflection = {
       date: today,
       score,
       features,
       comments,
     };
-
+  
     reflections.push(updatedReflection);
     localStorage.setItem('reflections', JSON.stringify(reflections));
-
+  
     alert(isEditing ? 'Reflection Updated!' : 'Reflection Submitted!');
     router.push('/');
-  };
+  };  
 
   return (
     <Box sx={{ padding: 4 }}>
