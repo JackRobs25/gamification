@@ -9,10 +9,16 @@ export default function Reflection() {
   const [dayFeatures, setDayFeatures] = useState([]);
   const [featureScores, setFeatureScores] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [reflectionDate, setReflectionDate] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    // Load custom features and today's reflection
+    // Get date from query parameter or default to today
+    const { date } = router.query;
+    const selectedDate = date || new Date().toISOString().slice(0, 10);
+    setReflectionDate(selectedDate);
+
+    // Load custom features
     const savedFeatures = JSON.parse(localStorage.getItem('dayFeatures')) || [
       'Family',
       'Friends',
@@ -23,20 +29,21 @@ export default function Reflection() {
     ];
     setDayFeatures(savedFeatures);
 
+    // Load feature scores
     const savedFeatureScores = JSON.parse(localStorage.getItem('featureScores')) || {};
     setFeatureScores(savedFeatureScores);
 
+    // Load the selected date's reflection
     const reflections = JSON.parse(localStorage.getItem('reflections')) || [];
-    const today = new Date().toISOString().slice(0, 10);
-    const todayReflection = reflections.find((reflection) => reflection.date === today);
+    const selectedReflection = reflections.find((reflection) => reflection.date === selectedDate);
 
-    if (todayReflection) {
-      setScore(todayReflection.score);
-      setFeatures(todayReflection.features || []);
-      setComments(todayReflection.comments || '');
+    if (selectedReflection) {
+      setScore(selectedReflection.score);
+      setFeatures(selectedReflection.features || []);
+      setComments(selectedReflection.comments || '');
       setIsEditing(true);
     }
-  }, []);
+  }, [router.query]);
 
   useEffect(() => {
     // Update feature scores based on reflection data
@@ -47,7 +54,7 @@ export default function Reflection() {
       reflections.forEach((reflection) => {
         if (Array.isArray(reflection.features)) {
           reflection.features.forEach((feature) => {
-            scores[feature] = (scores[feature] || { totalScore: 0, count: 0 });
+            scores[feature] = scores[feature] || { totalScore: 0, count: 0 };
             scores[feature].totalScore += reflection.score;
             scores[feature].count += 1;
           });
@@ -73,30 +80,29 @@ export default function Reflection() {
   };
 
   const handleSubmit = () => {
-    const today = new Date().toISOString().slice(0, 10);
     let reflections = JSON.parse(localStorage.getItem('reflections')) || [];
-  
-    // Remove the existing reflection for today
-    reflections = reflections.filter((reflection) => reflection.date !== today);
-  
+
+    // Remove the existing reflection for the selected date
+    reflections = reflections.filter((reflection) => reflection.date !== reflectionDate);
+
     const updatedReflection = {
-      date: today,
+      date: reflectionDate,
       score,
       features,
       comments,
     };
-  
+
     reflections.push(updatedReflection);
     localStorage.setItem('reflections', JSON.stringify(reflections));
-  
+
     alert(isEditing ? 'Reflection Updated!' : 'Reflection Submitted!');
     router.push('/');
-  };  
+  };
 
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h5" gutterBottom>
-        {isEditing ? 'Edit Today\'s Reflection' : 'Daily Reflection'}
+        {isEditing ? `Edit Reflection for ${reflectionDate}` : `Reflection for ${reflectionDate}`}
       </Typography>
 
       <Typography>Rate your day (1–10):</Typography>
